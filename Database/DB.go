@@ -5,13 +5,7 @@ import (
 	"log"
 )
 
-type Expense struct {
-	ID int
-	Title string
-	Amount int
-	Note string
-	Tags []string
-}
+
 
 var db *sql.DB
 

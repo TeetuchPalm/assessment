@@ -1,14 +1,15 @@
 package main
 
 import (
+	"apiEx/Database"
+	"apiEx/handler"
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"database/sql"
-	"log"
-	"apiExpense/Database"
-
 )
 
 
@@ -21,6 +22,10 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(handler.GetDB(db))
+
+	e.POST("/expenses", handler.CreateExpensesHandler)
+
 	fmt.Println("Please use server.go for main file")
 	fmt.Println("start at port:", os.Getenv("PORT"))
 	log.Fatal(e.Start(":2565"))
