@@ -1,8 +1,8 @@
 package main
 
 import (
-	"apiExpense/Database"
-	"apiExpense/handler"
+	"apiEx/Database"
+	"apiEx/handler"
 	"database/sql"
 	"fmt"
 	"log"

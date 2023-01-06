@@ -11,7 +11,7 @@ import (
 type Expense struct {
 	ID int
 	Title string
-	Amount int
+	Amount float64
 	Note string
 	Tags []string
 }
@@ -36,7 +36,7 @@ func CreateExpensesHandler(c echo.Context) error {
 	}
 
 	row := db.QueryRow("INSERT INTO expenses (title, amount, note, tags) values ($1, $2, $3, $4)  RETURNING id", ex.Title, ex.Amount, ex.Note, pq.Array(&ex.Tags))
-	err = row.Scan(&ex.ID)
+	err = row.Scan(&ex.ID,&ex.Title,&ex.Amount,&ex.Note,pq.Array(&ex.Tags))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
