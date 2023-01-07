@@ -101,22 +101,5 @@ func UpdateExpensesHandler(c echo.Context) error {
 	}
 }
 
-func GetAllExpensesHandler(c echo.Context) error {
-	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses WHERE id = $1;")
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query user statment:" + err.Error()})
-	}
 
-	row := stmt.QueryRow(intid)
-	ex := Expense{}
-	err = row.Scan(&ex.ID,&ex.Title,&ex.Amount,&ex.Note,pq.Array(&ex.Tags))
-	switch err {
-	case sql.ErrNoRows:
-		return c.JSON(http.StatusNotFound, Err{Message: "user not found"})
-	case nil:
-		return c.JSON(http.StatusOK, ex)
-	default:
-		return c.JSON(http.StatusInternalServerError, Err{Message: "can't scan user:" + err.Error()})
-	}
-}
 
