@@ -54,16 +54,60 @@ func CreateExpensesHandler(c echo.Context) error {
 func GetExpensesHandler(c echo.Context) error {
 	
 	id := c.Param("id")
+
 	idint,err := strconv.ParseInt(id,10,64)
+	intid := int(idint)
 	if err != nil{
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses WHERE id = $1")
+	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses WHERE id = $1;")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query user statment:" + err.Error()})
 	}
 
-	row := stmt.QueryRow(idint)
+	row := stmt.QueryRow(intid)
+	ex := Expense{}
+	err = row.Scan(&ex.ID,&ex.Title,&ex.Amount,&ex.Note,pq.Array(&ex.Tags))
+	switch err {
+	case sql.ErrNoRows:
+		return c.JSON(http.StatusNotFound, Err{Message: "user not found"})
+	case nil:
+		return c.JSON(http.StatusOK, ex)
+	default:
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't scan user:" + err.Error()})
+	}
+}
+
+func UpdateExpensesHandler(c echo.Context) error {
+	ex := Expense{}
+	err := c.Bind(&ex)
+	id := c.Param("id")
+	idint,err := strconv.ParseInt(id,10,64)
+	if err != nil{
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+	stmt, err := db.Prepare("UPDATE expenses SET title=$2, amount=$3, note=$4, tags=$5 WHERE id=$1;")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare statment update" + err.Error()})
+	}
+	ex.ID = int(idint)
+	_, err = stmt.Exec(idint, ex.Title, ex.Amount, ex.Note, pq.Array(&ex.Tags))
+	
+	switch err {
+	case nil:
+		return c.JSON(http.StatusOK, ex)
+	default:
+		return c.JSON(http.StatusInternalServerError, Err{Message: "error execute update" + err.Error()})
+	}
+}
+
+func GetAllExpensesHandler(c echo.Context) error {
+	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses WHERE id = $1;")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query user statment:" + err.Error()})
+	}
+
+	row := stmt.QueryRow(intid)
 	ex := Expense{}
 	err = row.Scan(&ex.ID,&ex.Title,&ex.Amount,&ex.Note,pq.Array(&ex.Tags))
 	switch err {

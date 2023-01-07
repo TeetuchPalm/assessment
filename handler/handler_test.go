@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -40,6 +41,7 @@ func TestCreateExpensesHandler(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
+
 	
 
 
@@ -50,21 +52,25 @@ func TestCreateExpensesHandler(t *testing.T) {
 
 }
 
-func TestGetUserHandler(t *testing.T) {
+func TestGetexpensesHandler(t *testing.T) {
 	e := echo.New()
 	stringForQuery := "{\"food\",\"beverage\"}"
 	var mock sqlmock.Sqlmock
 	db, mock, _ = sqlmock.New()
-	expectJSON := "{\"id\":0,\"title\":\"babo\",\"amount\":27,\"note\":\"asd\",\"tags\":[\"food\",\"beverage\"]}\n"
+	expectJSON := "{\"id\":10,\"title\":\"babo\",\"amount\":27,\"note\":\"asd\",\"tags\":[\"food\",\"beverage\"]}\n"
 	
-	row := sqlmock.NewRows([]string{"ID","Title","Amount","Note","Tags"}).AddRow(0, "babo", float64(27), "asd", stringForQuery)
+	
+	row := sqlmock.NewRows([]string{"ID","Title","Amount","Note","Tags"}).AddRow(10, "babo", float64(27), "asd", stringForQuery)
+	
 	// ถ้าเรา Prepare มา เราต้องใช้ ExpectPrepare ก่อนจะเป็น ExpectQuery 
-	mock.ExpectPrepare("SELECT id, title, amount, note, tags FROM expenses").ExpectQuery().WithArgs(0).WillReturnRows(row)
+	mock.ExpectPrepare("SELECT id, title, amount, note, tags FROM expenses").ExpectQuery().WithArgs(10).WillReturnRows(row)
 
-	req := httptest.NewRequest(http.MethodPost, uri("expenses", strconv.Itoa(1)), nil)
+	req := httptest.NewRequest(http.MethodPost, uri("expenses", strconv.Itoa(10)), nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+    c.SetParamValues("10")
    
 	if assert.NoError(t, GetExpensesHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -72,6 +78,37 @@ func TestGetUserHandler(t *testing.T) {
 	}
    
    }
+
+func TestUpdateexpensesHandler(t *testing.T) {
+	e := echo.New()
+	tagarray := []string{"food", "beverage"}
+	ex := Expense{Title: "babo", Amount: 27,Note: "asd",Tags : tagarray}
+	exJSON := `{"Title":"babo","Amount":27,"Note":"asd","Tags": ["food", "beverage"]}`
+	//stringForQuery := "{\"food\",\"beverage\"}"
+	var mock sqlmock.Sqlmock
+	db, mock, _ = sqlmock.New()
+	expectJSON := "{\"id\":10,\"title\":\"babo\",\"amount\":27,\"note\":\"asd\",\"tags\":[\"food\",\"beverage\"]}\n"
+	
+	//row := sqlmock.NewRows([]string{"ID","Title","Amount","Note","Tags"}).AddRow(10, "babo", float64(27), "asd", stringForQuery)
+	mockrow :=  sqlmock.NewResult(1,1)
+	
+	mock.ExpectPrepare(regexp.QuoteMeta("UPDATE expenses SET title=$2, amount=$3, note=$4, tags=$5 WHERE id=$1;")).ExpectExec().WithArgs(10, ex.Title, ex.Amount, ex.Note, pq.Array(&ex.Tags)).WillReturnResult(mockrow)
+
+	req := httptest.NewRequest(http.MethodPut, uri("expenses", strconv.Itoa(10)), strings.NewReader(exJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+    c.SetParamValues("10")
+   
+	if assert.NoError(t, UpdateExpensesHandler(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, expectJSON, rec.Body.String())
+	}
+   
+   }
+   
+
 
 func uri(paths ...string) string {
 	host := "http://localhost:2565"
@@ -82,5 +119,3 @@ func uri(paths ...string) string {
 	url := append([]string{host}, paths...)
 	return strings.Join(url, "/")
 }
-
-

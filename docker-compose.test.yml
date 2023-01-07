@@ -7,9 +7,9 @@ services:
   it_tests:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.test
     volumes:
-      - "${pwd}/go/src/target"
+      - ./:/go/src/target
     depends_on:
       - db
     networks:
