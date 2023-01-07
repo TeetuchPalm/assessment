@@ -23,9 +23,17 @@ func main() {
 	db = Database.InitDB("postgres://grzuanbs:J_Q4hKYnrgJmSBu8UnJPoxK85vmGhgLq@john.db.elephantsql.com/grzuanbs")
 
 	e := echo.New()
+
+	
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(handler.GetDB(db))
+	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		if username == "resistedz" && password == "6969" {
+			return true, nil
+		}
+		return false, nil
+	}))
 
 	e.POST("/expenses", handler.CreateExpensesHandler)
 	e.GET("/expenses/:id", handler.GetExpensesHandler)
