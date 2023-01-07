@@ -2,17 +2,18 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	_ "fmt"
 	"io"
 	_ "log"
 	"net/http"
-	_"net/http/httptest"
-	_"strings"
+	_ "net/http/httptest"
+	"strconv"
+	_ "strings"
 	"testing"
-	"bytes"
 
-	_"github.com/labstack/echo/v4"
+	_ "github.com/labstack/echo/v4"
 	_ "github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
 )
@@ -82,6 +83,22 @@ var ex Expense
 
 	
 }
+func TestGetUserByID(t *testing.T) {
+	c := seedUser(t)
+
+	var latest Expense
+	res := request(http.MethodGet, uri("expenses", strconv.Itoa(c.ID)), nil)
+	err := res.Decode(&latest)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, c.ID, latest.ID)
+	assert.NotEmpty(t, latest.Title)
+	assert.NotEmpty(t, latest.Amount)
+	assert.NotEmpty(t, latest.Note)
+	assert.NotEmpty(t, latest.Tags)
+
+}
 func request(method, url string, body io.Reader) *Response {
 	req, _ := http.NewRequest(method, url, body)
 	//AuthToken := "Basic cmVzaXN0ZWR6OjY5Njk="
@@ -103,4 +120,19 @@ func (r *Response) Decode(v interface{}) error {
 	}
 
 	return json.NewDecoder(r.Body).Decode(v)
+}
+
+func seedUser(t *testing.T) Expense {
+	var c Expense
+	body := bytes.NewBufferString(`{
+		"Title": "strawberry smoothie",
+		"Amount": 79,
+		"Note": "night market promotion discount 10 bath", 
+		"Tags": ["food", "beverage"]
+	}`)
+	err := request(http.MethodPost, uri("expenses"), body).Decode(&c)
+	if err != nil {
+		t.Fatal("can't create uomer:", err)
+	}
+	return c
 }
