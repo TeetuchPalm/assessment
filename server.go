@@ -26,6 +26,7 @@ func main() {
 
 	e.POST("/expenses", handler.CreateExpensesHandler)
 	e.GET("/expenses/:id", handler.GetExpensesHandler)
+	e.GET("/expenses", handler.GetAllExpensesHandler)
 	e.PUT("/expenses/:id", handler.UpdateExpensesHandler)
 
 	fmt.Println("Please use server.go for main file")

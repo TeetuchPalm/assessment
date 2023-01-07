@@ -102,21 +102,27 @@ func UpdateExpensesHandler(c echo.Context) error {
 }
 
 func GetAllExpensesHandler(c echo.Context) error {
-	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses WHERE id = $1;")
+	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses")
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query user statment:" + err.Error()})
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query all users statment:" + err.Error()})
 	}
 
-	row := stmt.QueryRow(intid)
-	ex := Expense{}
-	err = row.Scan(&ex.ID,&ex.Title,&ex.Amount,&ex.Note,pq.Array(&ex.Tags))
-	switch err {
-	case sql.ErrNoRows:
-		return c.JSON(http.StatusNotFound, Err{Message: "user not found"})
-	case nil:
-		return c.JSON(http.StatusOK, ex)
-	default:
-		return c.JSON(http.StatusInternalServerError, Err{Message: "can't scan user:" + err.Error()})
+	rows, err := stmt.Query()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "can't query all users:" + err.Error()})
 	}
+
+	exs := []Expense{}
+
+	for rows.Next() {
+		ex := Expense{}
+		err := rows.Scan(&ex.ID, &ex.Title, &ex.Amount, &ex.Note, pq.Array(&ex.Tags))
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, Err{Message: "can't scan user:" + err.Error()})
+		}
+		exs = append(exs, ex)
+	}
+
+	return c.JSON(http.StatusOK, exs)
 }
 

@@ -1,19 +1,15 @@
-// go:build integration
+//go:build integration
 package handler
 
 import (
 	"bytes"
 	"encoding/json"
-	_ "fmt"
 	"io"
 	"log"
-	_ "log"
 	"net/http"
-	_ "net/http/httptest"
 	"strconv"
-	_ "strings"
+	"strings"
 	"testing"
-
 	_ "github.com/labstack/echo/v4"
 	_ "github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
@@ -128,6 +124,18 @@ func TestUpdateExpenseByID(t *testing.T) {
 	assert.Equal(t, ex.Tags, latest.Tags)
 
 }
+
+func TestGetAllExpense(t *testing.T) {
+	seedUser(t)
+	var us []Expense
+
+	res := request(http.MethodGet, uri("expenses"), nil)
+	err := res.Decode(&us)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, http.StatusOK, res.StatusCode)
+	assert.Greater(t, len(us), 0)
+}
 func request(method, url string, body io.Reader) *Response {
 	req, _ := http.NewRequest(method, url, body)
 	//AuthToken := "Basic cmVzaXN0ZWR6OjY5Njk="
@@ -164,4 +172,14 @@ func seedUser(t *testing.T) Expense {
 		t.Fatal("can't create uomer:", err)
 	}
 	return c
+}
+
+func uri(paths ...string) string {
+	host := "http://localhost:2565"
+	if paths == nil {
+		return host
+	}
+
+	url := append([]string{host}, paths...)
+	return strings.Join(url, "/")
 }
