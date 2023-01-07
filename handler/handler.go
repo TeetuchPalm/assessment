@@ -35,15 +35,21 @@ func GetDB(dbsever *sql.DB) echo.MiddlewareFunc {
 
 func CreateExpensesHandler(c echo.Context) error {
 
-	ex := Expense{}
-	err := c.Bind(&ex) //เเปลงให้เป็น byte
+	ex := Expense{
+		ID:     0,
+		Title:  "",
+		Amount: 0,
+		Note:   "",
+		Tags:   []string{},
+	}
+	err := c.Bind(&ex) 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
 	row := db.QueryRow("INSERT INTO expenses (title, amount, note, tags) values ($1, $2, $3, $4)  RETURNING id, title, amount, note, tags", ex.Title, ex.Amount, ex.Note, pq.Array(&ex.Tags))
 	err = row.Scan(&ex.ID,&ex.Title,&ex.Amount,&ex.Note,pq.Array(&ex.Tags))
-	//err = row.Scan(&ex.ID)
+	
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -81,6 +87,9 @@ func GetExpensesHandler(c echo.Context) error {
 func UpdateExpensesHandler(c echo.Context) error {
 	ex := Expense{}
 	err := c.Bind(&ex)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
 	id := c.Param("id")
 	idint,err := strconv.ParseInt(id,10,64)
 	if err != nil{

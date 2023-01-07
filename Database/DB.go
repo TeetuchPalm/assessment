@@ -3,6 +3,7 @@ package Database
 import (
 	"database/sql"
 	"log"
+	"os"
 )
 
 
@@ -12,12 +13,10 @@ var db *sql.DB
 func InitDB(urlDB string) *sql.DB{
 	var err error
 	//urlDB = "postgres://grzuanbs:J_Q4hKYnrgJmSBu8UnJPoxK85vmGhgLq@john.db.elephantsql.com/grzuanbs"
-	db, err = sql.Open("postgres", urlDB)
-	//db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Connect to database error", err)
 	}
-	//defer db.Close()
 
 	createTb := `
 	CREATE TABLE IF NOT EXISTS expenses (
