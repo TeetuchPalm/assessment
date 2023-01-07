@@ -128,6 +128,18 @@ func TestUpdateExpenseByID(t *testing.T) {
 	assert.Equal(t, ex.Tags, latest.Tags)
 
 }
+
+func TestGetAllExpense(t *testing.T) {
+	seedUser(t)
+	var us []Expense
+
+	res := request(http.MethodGet, uri("expenses"), nil)
+	err := res.Decode(&us)
+
+	assert.Nil(t, err)
+	assert.EqualValues(t, http.StatusOK, res.StatusCode)
+	assert.Greater(t, len(us), 0)
+}
 func request(method, url string, body io.Reader) *Response {
 	req, _ := http.NewRequest(method, url, body)
 	//AuthToken := "Basic cmVzaXN0ZWR6OjY5Njk="

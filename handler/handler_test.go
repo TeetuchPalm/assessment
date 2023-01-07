@@ -107,6 +107,31 @@ func TestUpdateexpensesHandler(t *testing.T) {
 	}
    
    }
+   func TestGetAllexpensesHandler(t *testing.T) {
+	e := echo.New()
+	stringForQuery := "{\"food\",\"beverage\"}"
+	stringForQuery2 := "{\"food2\",\"beverage2\"}"
+	var mock sqlmock.Sqlmock
+	db, mock, _ = sqlmock.New()
+	expectJSON := "[{\"id\":1,\"title\":\"babo\",\"amount\":27,\"note\":\"asd\",\"tags\":[\"food\",\"beverage\"]},{\"id\":2,\"title\":\"babo2\",\"amount\":28,\"note\":\"asd2\",\"tags\":[\"food2\",\"beverage2\"]}]\n"
+	
+	
+	row := sqlmock.NewRows([]string{"ID","Title","Amount","Note","Tags"}).AddRow(1, "babo", float64(27), "asd", stringForQuery).AddRow(2, "babo2", float64(28), "asd2", stringForQuery2)
+	
+	// ถ้าเรา Prepare มา เราต้องใช้ ExpectPrepare ก่อนจะเป็น ExpectQuery 
+	mock.ExpectPrepare("SELECT id, title, amount, note, tags FROM expenses").ExpectQuery().WithArgs().WillReturnRows(row)
+
+	req := httptest.NewRequest(http.MethodPost, uri("expenses"), nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+   
+	if assert.NoError(t, GetAllExpensesHandler(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, expectJSON, rec.Body.String())
+	}
+   
+   }
    
 
 
