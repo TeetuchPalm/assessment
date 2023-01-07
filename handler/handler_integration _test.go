@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	_ "fmt"
 	"io"
+	"log"
 	_ "log"
 	"net/http"
 	_ "net/http/httptest"
@@ -83,7 +84,7 @@ var ex Expense
 
 	
 }
-func TestGetUserByID(t *testing.T) {
+func TestGetExpenseByID(t *testing.T) {
 	c := seedUser(t)
 
 	var latest Expense
@@ -97,6 +98,34 @@ func TestGetUserByID(t *testing.T) {
 	assert.NotEmpty(t, latest.Amount)
 	assert.NotEmpty(t, latest.Note)
 	assert.NotEmpty(t, latest.Tags)
+
+}
+
+func TestUpdateExpenseByID(t *testing.T) {
+	c := seedUser(t)
+	body := bytes.NewBufferString(`{
+		"Title": "strawberry smoothie",
+		"Amount": 79,
+		"Note": "night market promotion discount 10 bath", 
+		"Tags": ["food", "beverage"]
+}`)
+	var ex Expense
+	err := json.Unmarshal(body.Bytes(), &ex)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	var latest Expense
+	res := request(http.MethodPut, uri("expenses", strconv.Itoa(c.ID)), body)
+	err = res.Decode(&latest)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, c.ID, latest.ID)
+	assert.Equal(t, ex.Title, latest.Title)
+	assert.Equal(t, ex.Amount, latest.Amount)
+	assert.Equal(t, ex.Note, latest.Note)
+	assert.Equal(t, ex.Tags, latest.Tags)
 
 }
 func request(method, url string, body io.Reader) *Response {
