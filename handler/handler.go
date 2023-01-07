@@ -55,6 +55,9 @@ func GetExpensesHandler(c echo.Context) error {
 	
 	id := c.Param("id")
 	idint,err := strconv.ParseInt(id,10,64)
+	if err != nil{
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
 	stmt, err := db.Prepare("SELECT id, title, amount, note, tags FROM expenses WHERE id = $1")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: "can't prepare query user statment:" + err.Error()})
