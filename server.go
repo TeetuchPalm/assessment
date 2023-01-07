@@ -34,7 +34,7 @@ func main() {
 
 	fmt.Println("Please use server.go for main file")
 	fmt.Println("start at port:", os.Getenv("PORT"))
-	log.Fatal(e.Start(":2565"))
+	log.Fatal(e.Start(os.Getenv("PORT")))
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt)

@@ -2,6 +2,7 @@ package Database
 
 import (
 	"database/sql"
+	_"fmt"
 	"log"
 	"os"
 )
@@ -12,7 +13,7 @@ var db *sql.DB
 
 func InitDB(urlDB string) *sql.DB{
 	var err error
-	//urlDB = "postgres://grzuanbs:J_Q4hKYnrgJmSBu8UnJPoxK85vmGhgLq@john.db.elephantsql.com/grzuanbs"
+	urlDB = "postgres://grzuanbs:J_Q4hKYnrgJmSBu8UnJPoxK85vmGhgLq@john.db.elephantsql.com/grzuanbs"
 	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal("Connect to database error", err)
