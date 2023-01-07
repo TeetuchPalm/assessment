@@ -1,19 +1,15 @@
-// go:build integration
+//go:build integration
 package handler
 
 import (
 	"bytes"
 	"encoding/json"
-	_ "fmt"
 	"io"
 	"log"
-	_ "log"
 	"net/http"
-	_ "net/http/httptest"
 	"strconv"
-	_ "strings"
+	"strings"
 	"testing"
-
 	_ "github.com/labstack/echo/v4"
 	_ "github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
@@ -176,4 +172,14 @@ func seedUser(t *testing.T) Expense {
 		t.Fatal("can't create uomer:", err)
 	}
 	return c
+}
+
+func uri(paths ...string) string {
+	host := "http://localhost:2565"
+	if paths == nil {
+		return host
+	}
+
+	url := append([]string{host}, paths...)
+	return strings.Join(url, "/")
 }
