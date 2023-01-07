@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestCreateExpensesHandler(t *testing.T) {
 	stringForQuery := "{\"food\",\"beverage\"}"
 	ex := Expense{Title: "babo", Amount: 27,Note: "asd",Tags : tagarray}
 	exJSON := `{"Title":"babo","Amount":27,"Note":"asd","Tags": ["food", "beverage"]}`
-	expectJSON := "{\"ID\":0,\"Title\":\"babo\",\"Amount\":27,\"Note\":\"asd\",\"Tags\":[\"food\",\"beverage\"]}\n"
+	expectJSON := "{\"id\":0,\"title\":\"babo\",\"amount\":27,\"note\":\"asd\",\"tags\":[\"food\",\"beverage\"]}\n"
 	
 	//err := c.Bind(&ex) //เเปลงให้เป็น byte
 	/*if err != nil {
@@ -49,6 +50,29 @@ func TestCreateExpensesHandler(t *testing.T) {
 
 }
 
+func TestGetUserHandler(t *testing.T) {
+	e := echo.New()
+	stringForQuery := "{\"food\",\"beverage\"}"
+	var mock sqlmock.Sqlmock
+	db, mock, _ = sqlmock.New()
+	expectJSON := "{\"id\":0,\"title\":\"babo\",\"amount\":27,\"note\":\"asd\",\"tags\":[\"food\",\"beverage\"]}\n"
+	
+	row := sqlmock.NewRows([]string{"ID","Title","Amount","Note","Tags"}).AddRow(0, "babo", float64(27), "asd", stringForQuery)
+	// ถ้าเรา Prepare มา เราต้องใช้ ExpectPrepare ก่อนจะเป็น ExpectQuery 
+	mock.ExpectPrepare("SELECT id, title, amount, note, tags FROM expenses").ExpectQuery().WithArgs(0).WillReturnRows(row)
+
+	req := httptest.NewRequest(http.MethodPost, uri("expenses", strconv.Itoa(1)), nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+   
+	if assert.NoError(t, GetExpensesHandler(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, expectJSON, rec.Body.String())
+	}
+   
+   }
+
 func uri(paths ...string) string {
 	host := "http://localhost:2565"
 	if paths == nil {
@@ -58,3 +82,5 @@ func uri(paths ...string) string {
 	url := append([]string{host}, paths...)
 	return strings.Join(url, "/")
 }
+
+
